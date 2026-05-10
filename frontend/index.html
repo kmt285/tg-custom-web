@@ -3,43 +3,65 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Custom Telegram UI</title>
+    <title>Telegram Custom Web</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Scrollbar လေးတွေ လှသွားအောင် */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+    </style>
 </head>
-<body class="bg-gray-100 flex items-center justify-center min-h-screen font-sans">
+<body class="bg-gray-200 h-screen overflow-hidden font-sans">
 
-    <div class="bg-white rounded-lg shadow-lg w-full max-w-md h-[80vh] flex flex-col overflow-hidden">
+    <div id="messageBox" class="fixed top-4 left-1/2 transform -translate-x-1/2 z-50 text-sm font-semibold px-4 py-2 rounded shadow-lg hidden transition-all"></div>
+
+    <div id="loginView" class="flex items-center justify-center h-full">
+        <div class="bg-white p-8 rounded-lg shadow-lg w-96">
+            <h2 class="text-2xl font-bold text-center text-blue-600 mb-6">Telegram Login</h2>
+            
+            <div id="phoneSection">
+                <label class="block text-gray-700 text-sm font-bold mb-2">Phone Number</label>
+                <input type="text" id="phoneNumber" placeholder="+959..." class="border rounded w-full py-2 px-3 text-gray-700 mb-4 focus:outline-none focus:border-blue-500">
+                <button id="sendCodeBtn" onclick="requestOTP()" class="w-full bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded">Get Code</button>
+            </div>
+
+            <div id="otpSection" class="hidden mt-4">
+                <p class="text-sm text-gray-600 mb-4 text-center">We've sent a code to your Telegram app.</p>
+                <label class="block text-gray-700 text-sm font-bold mb-2">Code</label>
+                <input type="text" id="otpCode" placeholder="12345" class="border rounded w-full py-2 px-3 text-gray-700 mb-4 focus:outline-none focus:border-blue-500">
+                <button id="verifyBtn" onclick="verifyOTP()" class="w-full bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded">Login</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="mainAppView" class="hidden h-full flex max-w-6xl mx-auto shadow-2xl bg-white">
         
-        <div class="bg-blue-600 text-white p-4 flex justify-between items-center shadow-md">
-            <h2 class="text-xl font-bold" id="headerTitle">Telegram Login</h2>
-            <button id="logoutBtn" onclick="logout()" class="hidden text-sm underline hover:text-blue-200">Logout</button>
+        <div class="w-1/3 border-r border-gray-200 flex flex-col bg-white">
+            <div class="p-4 bg-gray-50 border-b flex justify-between items-center">
+                <h3 class="font-bold text-lg text-gray-700">My Chats</h3>
+                <button onclick="logout()" class="text-xs text-red-500 hover:underline">Logout</button>
+            </div>
+            <div id="chatLoading" class="p-4 text-center text-gray-500 text-sm">Loading chats...</div>
+            <ul id="chatList" class="flex-1 overflow-y-auto divide-y divide-gray-100">
+                </ul>
         </div>
 
-        <div class="flex-1 overflow-y-auto p-6" id="mainContent">
-
-            <div id="messageBox" class="mb-4 text-center text-sm font-semibold hidden"></div>
-
-            <div id="loginView">
-                <div id="phoneSection">
-                    <label class="block text-gray-700 text-sm font-bold mb-2">Phone Number</label>
-                    <input type="text" id="phoneNumber" placeholder="+959..." class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 mb-4 focus:outline-none focus:border-blue-500">
-                    <button id="sendCodeBtn" onclick="requestOTP()" class="w-full bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded transition">Get Code</button>
-                </div>
-
-                <div id="otpSection" class="hidden mt-4">
-                    <p class="text-sm text-gray-600 mb-4 text-center">We've sent a code to your Telegram app.</p>
-                    <label class="block text-gray-700 text-sm font-bold mb-2">Confirmation Code</label>
-                    <input type="text" id="otpCode" placeholder="12345" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 mb-4 focus:outline-none focus:border-blue-500">
-                    <button id="verifyBtn" onclick="verifyOTP()" class="w-full bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded transition">Login</button>
+        <div class="w-2/3 flex flex-col bg-[#e5ddd5]">
+            <div class="p-4 bg-gray-50 border-b flex items-center shadow-sm z-10">
+                <h3 id="activeChatName" class="font-bold text-lg text-gray-800">Select a chat to start messaging</h3>
+            </div>
+            
+            <div id="messageArea" class="flex-1 overflow-y-auto p-4 space-y-4">
+                <div class="text-center text-gray-500 mt-10" id="messagePlaceholder">
+                    Messages will appear here
                 </div>
             </div>
 
-            <div id="chatView" class="hidden">
-                <div id="chatLoading" class="text-center text-gray-500 py-4">Loading chats...</div>
-                <ul id="chatList" class="divide-y divide-gray-200">
-                    </ul>
+            <div id="inputArea" class="p-4 bg-gray-50 border-t flex items-center gap-2 hidden">
+                <input type="text" id="msgInput" placeholder="Type a message..." class="flex-1 border border-gray-300 rounded-full py-2 px-4 focus:outline-none focus:border-blue-400" onkeypress="handleEnter(event)">
+                <button onclick="sendMsg()" id="sendMsgBtn" class="bg-blue-500 hover:bg-blue-600 text-white p-2 px-4 rounded-full font-bold">Send</button>
             </div>
-
         </div>
     </div>
 
@@ -47,141 +69,194 @@
         const API_BASE_URL = "/api"; 
         let phoneCodeHashGlobal = "";
         let phoneNumberGlobal = localStorage.getItem('userPhone') || "";
+        let currentChatId = null; // လက်ရှိ ဖွင့်ထားတဲ့ Chat ID
 
-        function showMessage(msg, isError = false) {
-            const msgBox = document.getElementById('messageBox');
-            msgBox.textContent = msg;
-            msgBox.className = `mb-4 text-center text-sm font-semibold p-2 rounded ${isError ? 'bg-red-100 text-red-600' : 'bg-green-100 text-green-600'}`;
-            msgBox.classList.remove('hidden');
-            setTimeout(() => msgBox.classList.add('hidden'), 3000);
-        }
-
-        // စစချင်း ဝင်လာကတည်းက Login ဝင်ထားပြီးသားလား စစ်မည်
+        // ဝင်ဝင်ချင်း User ရှိရင် Chat App ကို တန်းဖွင့်မယ်
         window.onload = () => {
             if (phoneNumberGlobal) {
-                showChatView();
+                showAppView();
             }
         };
 
-        // --- အပိုင်း ၁: Login ပိုင်း (အရင်အတိုင်း) ---
+        // --- UI အကူအညီ Function များ ---
+        function showNotification(msg, isError = false) {
+            const box = document.getElementById('messageBox');
+            box.textContent = msg;
+            box.className = `fixed top-4 left-1/2 transform -translate-x-1/2 z-50 text-sm font-semibold px-6 py-3 rounded shadow-lg transition-all ${isError ? 'bg-red-500 text-white' : 'bg-green-500 text-white'}`;
+            box.classList.remove('hidden');
+            setTimeout(() => box.classList.add('hidden'), 3000);
+        }
+
+        function showAppView() {
+            document.getElementById('loginView').classList.add('hidden');
+            document.getElementById('mainAppView').classList.remove('hidden');
+            document.getElementById('mainAppView').classList.add('flex');
+            loadDialogs();
+        }
+
+        // --- အပိုင်း (၁): Login API များ ---
         async function requestOTP() {
             const phoneInput = document.getElementById('phoneNumber').value.trim();
-            if (!phoneInput) return showMessage("Please enter phone number", true);
-
-            const btn = document.getElementById('sendCodeBtn');
-            btn.innerText = "Sending..."; btn.disabled = true;
-
+            if (!phoneInput) return showNotification("Phone number required", true);
+            
+            document.getElementById('sendCodeBtn').innerText = "Sending...";
             try {
-                const response = await fetch(`${API_BASE_URL}/auth/send-code`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+                const res = await fetch(`${API_BASE_URL}/auth/send-code`, {
+                    method: 'POST', headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ phoneNumber: phoneInput })
                 });
-                const data = await response.json();
+                const data = await res.json();
                 if (data.success) {
                     phoneCodeHashGlobal = data.phoneCodeHash;
                     phoneNumberGlobal = phoneInput;
                     document.getElementById('phoneSection').classList.add('hidden');
                     document.getElementById('otpSection').classList.remove('hidden');
-                    showMessage("Code sent!");
+                    showNotification("Code sent to Telegram!");
                 } else {
-                    showMessage(data.error, true);
-                    btn.innerText = "Get Code"; btn.disabled = false;
+                    showNotification(data.error, true);
+                    document.getElementById('sendCodeBtn').innerText = "Get Code";
                 }
-            } catch (error) {
-                showMessage("Error connecting to server", true);
-                btn.innerText = "Get Code"; btn.disabled = false;
+            } catch (e) {
+                showNotification("Network Error", true);
+                document.getElementById('sendCodeBtn').innerText = "Get Code";
             }
         }
 
         async function verifyOTP() {
             const codeInput = document.getElementById('otpCode').value.trim();
-            if (!codeInput) return showMessage("Please enter code", true);
+            if (!codeInput) return showNotification("Enter code", true);
 
-            const btn = document.getElementById('verifyBtn');
-            btn.innerText = "Verifying..."; btn.disabled = true;
-
+            document.getElementById('verifyBtn').innerText = "Verifying...";
             try {
-                const response = await fetch(`${API_BASE_URL}/auth/verify-code`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        phoneNumber: phoneNumberGlobal,
-                        phoneCodeHash: phoneCodeHashGlobal,
-                        code: codeInput
-                    })
+                const res = await fetch(`${API_BASE_URL}/auth/verify-code`, {
+                    method: 'POST', headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ phoneNumber: phoneNumberGlobal, phoneCodeHash: phoneCodeHashGlobal, code: codeInput })
                 });
-                const data = await response.json();
+                const data = await res.json();
                 if (data.success) {
                     localStorage.setItem('userPhone', phoneNumberGlobal);
-                    showChatView();
+                    showNotification("Login Success!");
+                    showAppView();
                 } else {
-                    showMessage(data.error, true);
-                    btn.innerText = "Login"; btn.disabled = false;
+                    showNotification(data.error, true);
+                    document.getElementById('verifyBtn').innerText = "Login";
                 }
-            } catch (error) {
-                showMessage("Error connecting to server", true);
-                btn.innerText = "Login"; btn.disabled = false;
+            } catch (e) {
+                showNotification("Network Error", true);
+                document.getElementById('verifyBtn').innerText = "Login";
             }
         }
 
-        // --- အပိုင်း ၂: Chat List ပိုင်း (အသစ်) ---
-        function showChatView() {
-            document.getElementById('loginView').classList.add('hidden');
-            document.getElementById('chatView').classList.remove('hidden');
-            document.getElementById('headerTitle').innerText = "My Chats";
-            document.getElementById('logoutBtn').classList.remove('hidden');
-            
-            // Chat များကို ဆွဲထုတ်မည်
-            fetchChats();
-        }
-
-        async function fetchChats() {
+        // --- အပိုင်း (၂): Chat List (Dialogs) ယူခြင်း ---
+        async function loadDialogs() {
             try {
-                // ဖုန်းနံပါတ်ကို URL parameter အနေနဲ့ ပို့မည်
-                const response = await fetch(`${API_BASE_URL}/chat/dialogs?phoneNumber=${encodeURIComponent(phoneNumberGlobal)}`);
-                const data = await response.json();
-
+                const res = await fetch(`${API_BASE_URL}/chat/dialogs?phoneNumber=${encodeURIComponent(phoneNumberGlobal)}`);
+                const data = await res.json();
                 document.getElementById('chatLoading').classList.add('hidden');
-                
+
                 if (data.success) {
-                    const chatListEl = document.getElementById('chatList');
-                    chatListEl.innerHTML = ""; // ရှင်းထုတ်မည်
-
+                    const listEl = document.getElementById('chatList');
+                    listEl.innerHTML = ""; 
+                    
                     data.chats.forEach(chat => {
-                        // Chat တစ်ခုချင်းစီအတွက် HTML တည်ဆောက်မည်
                         const li = document.createElement('li');
-                        li.className = "py-3 flex justify-between items-center hover:bg-gray-50 cursor-pointer px-2 rounded";
+                        li.className = "p-3 hover:bg-blue-50 cursor-pointer flex flex-col";
+                        // နှိပ်လိုက်ရင် Message ဆွဲထုတ်မယ့် Function ကို ခေါ်မည်
+                        li.onclick = () => openChat(chat.id, chat.title);
                         
-                        // အမည် နှင့် နောက်ဆုံးစာသား
-                        const infoDiv = document.createElement('div');
-                        infoDiv.className = "flex-1 min-w-0";
-                        infoDiv.innerHTML = `
-                            <p class="text-sm font-medium text-gray-900 truncate">${chat.title || 'Unknown'}</p>
-                            <p class="text-sm text-gray-500 truncate">${chat.lastMessage}</p>
+                        li.innerHTML = `
+                            <div class="flex justify-between items-center mb-1">
+                                <span class="font-bold text-gray-800 text-sm truncate w-3/4">${chat.title || 'Unknown'}</span>
+                                ${chat.unreadCount > 0 ? `<span class="bg-blue-500 text-white text-[10px] px-2 py-0.5 rounded-full">${chat.unreadCount}</span>` : ''}
+                            </div>
+                            <span class="text-xs text-gray-500 truncate">${chat.lastMessage || '...'}</span>
                         `;
-
-                        // Unread Count
-                        const badgeDiv = document.createElement('div');
-                        if (chat.unreadCount > 0) {
-                            badgeDiv.innerHTML = `<span class="inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none text-white bg-blue-600 rounded-full">${chat.unreadCount}</span>`;
-                        }
-
-                        li.appendChild(infoDiv);
-                        li.appendChild(badgeDiv);
-                        chatListEl.appendChild(li);
+                        listEl.appendChild(li);
                     });
-                } else {
-                    showMessage("Failed to load chats.", true);
                 }
-            } catch (error) {
+            } catch (e) {
                 document.getElementById('chatLoading').innerText = "Error loading chats.";
             }
         }
 
+        // --- အပိုင်း (၃): Message များ ဆွဲထုတ်ခြင်း ---
+        async function openChat(chatId, chatTitle) {
+            currentChatId = chatId;
+            document.getElementById('activeChatName').innerText = chatTitle;
+            document.getElementById('inputArea').classList.remove('hidden'); // Input ကို ဖော်မည်
+            document.getElementById('inputArea').classList.add('flex');
+            
+            const msgArea = document.getElementById('messageArea');
+            msgArea.innerHTML = `<div class="text-center text-gray-500 mt-4">Loading messages...</div>`;
+
+            try {
+                const res = await fetch(`${API_BASE_URL}/chat/messages?phoneNumber=${encodeURIComponent(phoneNumberGlobal)}&chatId=${chatId}`);
+                const data = await res.json();
+
+                if (data.success) {
+                    msgArea.innerHTML = ""; // ရှင်းထုတ်မည်
+                    data.messages.forEach(msg => appendMessageUI(msg.text, msg.isMe));
+                    scrollToBottom();
+                } else {
+                    msgArea.innerHTML = `<div class="text-center text-red-500 mt-4">Failed to load messages</div>`;
+                }
+            } catch (e) {
+                msgArea.innerHTML = `<div class="text-center text-red-500 mt-4">Network error</div>`;
+            }
+        }
+
+        // --- အပိုင်း (၄): စာပို့ခြင်း ---
+        async function sendMsg() {
+            if (!currentChatId) return;
+            const inputEl = document.getElementById('msgInput');
+            const text = inputEl.value.trim();
+            if (!text) return;
+
+            // ချက်ချင်း UI မှာ အရင်ပေါ်အောင် ပြမည် (User Experience အတွက်)
+            appendMessageUI(text, true);
+            inputEl.value = "";
+            scrollToBottom();
+
+            try {
+                // Backend သို့ လှမ်းပို့မည်
+                await fetch(`${API_BASE_URL}/chat/send`, {
+                    method: 'POST', headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ phoneNumber: phoneNumberGlobal, chatId: currentChatId, message: text })
+                });
+            } catch (e) {
+                showNotification("Failed to send message", true);
+            }
+        }
+
+        // Enter ခေါက်ရင် စာပို့ရန်
+        function handleEnter(e) {
+            if (e.key === 'Enter') sendMsg();
+        }
+
+        // Message UI ဖန်တီးသည့် အကူအညီ Function (ကိုယ်ပို့တာနဲ့ သူများပို့တာ အရောင်ခွဲရန်)
+        function appendMessageUI(text, isMe) {
+            if (!text) return;
+            const msgArea = document.getElementById('messageArea');
+            const wrapper = document.createElement('div');
+            wrapper.className = `flex ${isMe ? 'justify-end' : 'justify-start'}`;
+            
+            const bubble = document.createElement('div');
+            // ကိုယ်ပို့ရင် အစိမ်းရောင် (WhatsApp/Telegram ပုံစံ)၊ သူများပို့ရင် အဖြူရောင်
+            bubble.className = `max-w-[75%] rounded-lg px-4 py-2 shadow text-sm ${isMe ? 'bg-[#d9fdd3] text-gray-800' : 'bg-white text-gray-800'}`;
+            bubble.innerText = text;
+            
+            wrapper.appendChild(bubble);
+            msgArea.appendChild(wrapper);
+        }
+
+        function scrollToBottom() {
+            const msgArea = document.getElementById('messageArea');
+            msgArea.scrollTop = msgArea.scrollHeight;
+        }
+
         function logout() {
             localStorage.removeItem('userPhone');
-            location.reload(); // Page ကို ပြန်စမည်
+            location.reload();
         }
     </script>
 </body>
