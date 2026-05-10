@@ -1,4 +1,4 @@
-const { TelegramClient } = require('telegram');
+const { TelegramClient, Api } = require('telegram');
 const { StringSession } = require('telegram/sessions');
 const User = require('../models/User');
 
@@ -15,7 +15,7 @@ exports.sendCode = async (req, res) => {
     if (!phoneNumber) return res.status(400).json({ error: 'Phone number is required' });
 
     try {
-        const stringSession = new StringSession(''); // Session အသစ်စမည်
+        const stringSession = new StringSession(''); 
         const client = new TelegramClient(stringSession, apiId, apiHash, {
             connectionRetries: 5,
         });
@@ -26,7 +26,7 @@ exports.sendCode = async (req, res) => {
             apiHash: apiHash
         }, phoneNumber);
 
-        // Client Object နှင့် PhoneCodeHash ကို Map ထဲတွင် သိမ်းထားမည်
+        // Client Object ကို သိမ်းထားမည်
         pendingClients.set(phoneNumber, { client, phoneCodeHash: result.phoneCodeHash });
 
         res.status(200).json({ 
@@ -35,7 +35,7 @@ exports.sendCode = async (req, res) => {
             message: "OTP sent to Telegram app" 
         });
     } catch (error) {
-        console.error(error);
+        console.error("Send Code Error:", error);
         res.status(500).json({ success: false, error: error.message });
     }
 };
@@ -56,7 +56,7 @@ exports.verifyCode = async (req, res) => {
 
         const { client } = sessionData;
 
-        // OTP ဖြင့် Login ဝင်ခြင်း (Direct API Call ဖြင့် တိတိကျကျ ခေါ်မည်)
+        // Api ကိုသုံးပြီး တိုက်ရိုက် Login ဝင်ခြင်း (Error ချက်ချင်းသိရရန်)
         await client.invoke(
             new Api.auth.SignIn({
                 phoneNumber: phoneNumber,
@@ -68,7 +68,7 @@ exports.verifyCode = async (req, res) => {
         // Login အောင်မြင်ပါက Session String ကို ထုတ်ယူမည်
         const sessionString = client.session.save();
 
-        // MongoDB ထဲတွင် Update (သို့) အသစ် ဖန်တီးမည်
+        // MongoDB ထဲတွင် သိမ်းမည်
         let user = await User.findOne({ phoneNumber });
         if (!user) {
             user = new User({ phoneNumber, telegramSession: sessionString });
@@ -86,7 +86,16 @@ exports.verifyCode = async (req, res) => {
             role: user.role
         });
     } catch (error) {
-        console.error(error);
-        res.status(500).json({ success: false, error: error.message });
+        console.error("Verify Code Error:", error);
+        
+        // Telegram အကောင့်မှာ 2FA ခံထားရင် တက်မည့် Error ကို ဖမ်းခြင်း
+        if (error.errorMessage === 'SESSION_PASSWORD_NEEDED') {
+            return res.status(401).json({ 
+                success: false, 
+                error: "This account has 2-Step Verification enabled. Password needed." 
+            });
+        }
+
+        res.status(500).json({ success: false, error: error.errorMessage || error.message || "Invalid Code" });
     }
 };
