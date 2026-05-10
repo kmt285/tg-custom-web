@@ -64,6 +64,7 @@ exports.verifyCode = async (req, res) => {
             phoneNumber: phoneNumber,
             phoneCodeHash: phoneCodeHash,
             phoneCode: code,
+            onError: (err) => console.log("GramJS Auth Error:", err), // 🌟 ဒီစာကြောင်းလေး ထပ်ထည့်ပေးပါ
         });
 
         // Login အောင်မြင်ပါက Session String ကို ထုတ်ယူမည်
