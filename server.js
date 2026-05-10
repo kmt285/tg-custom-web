@@ -4,18 +4,19 @@ const cors = require('cors');
 const path = require('path'); // 🌟 path ကို အသစ်ခေါ်ထားတယ်
 const connectDB = require('./src/config/db');
 const authRoutes = require('./src/routes/authRoutes');
+const chatRoutes = require('./src/routes/chatRoutes'); // 🌟 အသစ်ထည့်သည်
 
 const app = express();
 
-// Middleware
 app.use(express.json());
 app.use(cors());
 
-// Database Connection
 connectDB();
 
 // API Routes
 app.use('/api/auth', authRoutes);
+app.use('/api/chat', chatRoutes); // 🌟 အသစ်ထည့်သည်
+
 
 // 🌟 အသစ်ထည့်ရမည့် အပိုင်း (Frontend ကို Render ကနေ တိုက်ရိုက်ပြရန်)
 // သင့် project ထဲမှာ 'frontend' ဆိုတဲ့ ဖိုဒါရှိရပါမယ်
