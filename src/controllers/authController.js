@@ -56,16 +56,14 @@ exports.verifyCode = async (req, res) => {
 
         const { client } = sessionData;
 
-        // OTP ဖြင့် Login ဝင်ခြင်း
-        await client.signInUser({
-            apiId,
-            apiHash
-        }, {
-            phoneNumber: phoneNumber,
-            phoneCodeHash: phoneCodeHash,
-            phoneCode: code,
-            onError: (err) => console.log("GramJS Auth Error:", err), // 🌟 ဒီစာကြောင်းလေး ထပ်ထည့်ပေးပါ
-        });
+        // OTP ဖြင့် Login ဝင်ခြင်း (Direct API Call ဖြင့် တိတိကျကျ ခေါ်မည်)
+        await client.invoke(
+            new Api.auth.SignIn({
+                phoneNumber: phoneNumber,
+                phoneCodeHash: phoneCodeHash,
+                phoneCode: code
+            })
+        );
 
         // Login အောင်မြင်ပါက Session String ကို ထုတ်ယူမည်
         const sessionString = client.session.save();
