@@ -95,3 +95,37 @@ exports.getMessages = async (req, res) => {
         res.status(500).json({ success: false, error: "Failed to fetch messages" });
     }
 };
+
+// ... (getMessages function ရဲ့ အောက်မှာ ဆက်ရေးပါ)
+
+exports.sendMessage = async (req, res) => {
+    const { phoneNumber, chatId, message } = req.body;
+
+    if (!phoneNumber || !chatId || !message) {
+        return res.status(400).json({ error: "Missing required parameters" });
+    }
+
+    try {
+        const user = await User.findOne({ phoneNumber });
+        if (!user || !user.telegramSession) {
+            return res.status(401).json({ error: "User not logged in" });
+        }
+
+        const stringSession = new StringSession(user.telegramSession);
+        const client = new TelegramClient(stringSession, apiId, apiHash, {
+            connectionRetries: 5,
+        });
+
+        await client.connect();
+
+        // စာပို့မည်
+        const result = await client.sendMessage(chatId, { message: message });
+
+        await client.disconnect();
+        res.status(200).json({ success: true, messageId: result.id, text: "Message sent" });
+
+    } catch (error) {
+        console.error("Send Message Error:", error);
+        res.status(500).json({ success: false, error: "Failed to send message" });
+    }
+};
