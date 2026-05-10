@@ -54,3 +54,44 @@ exports.getDialogs = async (req, res) => {
         res.status(500).json({ success: false, error: "Failed to fetch chats" });
     }
 };
+
+
+exports.getMessages = async (req, res) => {
+    const { phoneNumber, chatId } = req.query;
+
+    if (!phoneNumber || !chatId) {
+        return res.status(400).json({ error: "Phone number and Chat ID are required" });
+    }
+
+    try {
+        const user = await User.findOne({ phoneNumber });
+        if (!user || !user.telegramSession) {
+            return res.status(401).json({ error: "User not logged in" });
+        }
+
+        const stringSession = new StringSession(user.telegramSession);
+        const client = new TelegramClient(stringSession, apiId, apiHash, {
+            connectionRetries: 5,
+        });
+
+        await client.connect();
+
+        // သတ်မှတ်ထားတဲ့ Chat ID ကနေ နောက်ဆုံး Message အခု ၅၀ ကို ယူမယ်
+        const messages = await client.getMessages(chatId, { limit: 50 });
+
+        const messageList = messages.map(msg => ({
+            id: msg.id,
+            text: msg.message,
+            isMe: msg.out, // ကိုယ်ပို့တဲ့စာလား၊ သူများပို့တဲ့စာလား
+            date: msg.date,
+            senderId: msg.senderId ? msg.senderId.toString() : null
+        }));
+
+        await client.disconnect();
+        res.status(200).json({ success: true, messages: messageList.reverse() }); // အဟောင်းကနေ အသစ်စီရန် reverse လုပ်သည်
+
+    } catch (error) {
+        console.error("Get Messages Error:", error);
+        res.status(500).json({ success: false, error: "Failed to fetch messages" });
+    }
+};
