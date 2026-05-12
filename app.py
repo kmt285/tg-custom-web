@@ -55,6 +55,23 @@ def get_sessions():
     sessions = list(sessions_col.find({}, {"_id": 0}))
     return jsonify(sessions)
 
+@app.route('/api/delete_session', methods=['POST'])
+@require_api_key
+def delete_session():
+    data = request.json
+    user_id = data.get('user_id')
+    
+    if not user_id:
+        return jsonify({"error": "User ID is required"}), 400
+    
+    # User ရဲ့ Data အားလုံးကို MongoDB ထဲကနေ ဖျက်ပစ်ပါမယ်
+    result = sessions_col.delete_one({"user_id": user_id})
+    
+    if result.deleted_count > 0:
+        return jsonify({"status": "success", "message": f"Session for {user_id} permanently deleted."})
+    else:
+        return jsonify({"status": "not_found", "message": "Session not found."})
+
 if __name__ == '__main__':
     port = int(os.environ.get("PORT", 10000))
     app.run(host='0.0.0.0', port=port)
